@@ -3,7 +3,7 @@
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.
 // IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
 //
 // License can be found in OpenFace-license.txt
@@ -14,20 +14,20 @@
 //
 //       OpenFace 2.0: Facial Behavior Analysis Toolkit
 //       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
-//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
+//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018
 //
 //       Convolutional experts constrained local model for facial landmark detection.
 //       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
-//       in Computer Vision and Pattern Recognition Workshops, 2017.    
+//       in Computer Vision and Pattern Recognition Workshops, 2017.
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
-//       in IEEE International. Conference on Computer Vision (ICCV),  2015 
+//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling
+//       in IEEE International. Conference on Computer Vision (ICCV),  2015
 //
 //       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
-//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
-//       in Facial Expression Recognition and Analysis Challenge, 
-//       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
+//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson
+//       in Facial Expression Recognition and Analysis Challenge,
+//       IEEE International Conference on Automatic Face and Gesture Recognition, 2015
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +108,7 @@ void RecorderOpenFace::VideoWritingTask(bool is_sequence)
 			{
 				WARN_STREAM("Could not output tracked image");
 			}
-		}		
+		}
 	}
 }
 
@@ -152,6 +152,9 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		exit(1);
 	}
 
+
+
+
 	// Populate relative and full path names in the meta file, unless it is a webcam
 	if (!params.isFromWebcam())
 	{
@@ -162,6 +165,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 			input_filename_full = boost::filesystem::canonical(input_filename_relative).string();
 		}
 		metadata_file << "Input:" << input_filename_relative << endl;
+
 		metadata_file << "Input full path:" << input_filename_full << endl;
 	}
 	else
@@ -184,8 +188,8 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		hog_filename = (path(record_root) / hog_filename).string();
 		hog_recorder.Open(hog_filename);
 	}
-		
-	// saving the videos	
+
+	// saving the videos
 	if (params.outputTracked())
 	{
 		if (params.isSequence())
@@ -209,7 +213,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		aligned_output_directory = out_name + "_aligned";
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
-		CreateDirectory(aligned_output_directory);		
+		CreateDirectory(aligned_output_directory);
 	}
 
 	this->frame_number = 0;
@@ -315,16 +319,15 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 
 void RecorderOpenFace::WriteObservation()
 {
-
-	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)	
+	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)
 	if(!csv_recorder.isOpen())
 	{
 		// As we are writing out the header, work out some things like number of landmarks, names of AUs etc.
-		int num_face_landmarks = landmarks_2D.rows / 2;
-		int num_eye_landmarks = (int)eye_landmarks2D.size();
-		int num_model_modes = pdm_params_local.rows;
+		num_face_landmarks = landmarks_2D.rows / 2;
+		num_eye_landmarks = (int)eye_landmarks2D.size();
+		num_model_modes = pdm_params_local.rows;
 
-		std::vector<std::string> au_names_class;
+
 		for (auto au : au_occurences)
 		{
 			au_names_class.push_back(au.first);
@@ -332,7 +335,6 @@ void RecorderOpenFace::WriteObservation()
 
 		std::sort(au_names_class.begin(), au_names_class.end());
 
-		std::vector<std::string> au_names_reg;
 		for (auto au : au_intensities)
 		{
 			au_names_reg.push_back(au.first);
@@ -351,12 +353,197 @@ void RecorderOpenFace::WriteObservation()
 		csv_filename = (path(record_root) / csv_filename).string();
 		csv_recorder.Open(csv_filename, params.isSequence(), params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
 			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
+
 	}
 
-	this->csv_recorder.WriteLine(face_id, frame_number, timestamp, landmark_detection_success, 
+	// write data to csv
+	this->csv_recorder.WriteLine(face_id, frame_number, timestamp, landmark_detection_success,
 		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
 		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks2D, eye_landmarks3D, au_intensities, au_occurences);
 
+	// This is an example of how the JSON data looks like per frame: {"meta data": {"Input": "", "Input full path": "", ... }, "facedata":{"frame": 1, "face_id": 0, ... } }
+	// put metadata in json string
+	jsondata.str(""); jsondata.clear(); // Empty JSON string for every frame
+	jsondata << "{" << endl << "\"metadata\": {" << endl;
+
+	// Output whether or not a camera is used.
+	if (!params.isFromWebcam())
+	{
+		jsondata << "\"Input\": \"from file\"," << endl;
+	}
+	else
+	{
+		jsondata << "\"Input\": \"webcam\"," << endl;
+	}
+
+	jsondata << "\"Camera parameters\": [" << params.getFx() << ", " << params.getFy() << ", " << params.getCx() << ", " << params.getCy() << "]," << endl;
+
+	if (params.outputHOG())
+	{
+		std::string hog_filename = out_name + ".hog";
+		jsondata << "\"Output HOG\": \"" << hog_filename << "\"," << endl;
+	}
+
+	jsondata << "\"Output csv\": \"" << csv_filename << "\"," << endl;
+	jsondata << "\"Gaze\": " << params.outputGaze() << "," << endl;
+	jsondata << "\"AU\": " << params.outputAUs() << "," << endl;
+	jsondata << "\"Landmarks 2D\": " << params.output2DLandmarks() << "," << endl;
+	jsondata << "\"Landmarks 3D\": " << params.output3DLandmarks() << "," << endl;
+	jsondata << "\"Pose\": " << params.outputPose() << "," << endl;
+	jsondata << "\"Shape parameters\": " << params.outputPDMParams() << endl;
+
+	jsondata << "}," << endl; // end of metadata in JSON
+
+	// output rest of the data to json
+	jsondata << "\"facedata\": {" << endl;
+
+	jsondata << "\"frame_number\": " << frame_number << ", ";
+	jsondata << "\"face_id\": " << face_id << ", ";
+	jsondata << "\"timestamp\": " << timestamp << ", ";
+	jsondata << "\"landmark_detection_confidence\": " << landmark_detection_confidence  << ", ";
+	jsondata << "\"landmark_detection_success\": " << landmark_detection_success << ", ";
+
+	// output gaze data
+	jsondata << "\"gaze_0_x\": " << gaze_direction0.x << ", ";
+	jsondata << "\"gaze_0_y\": " << gaze_direction0.y << ", ";
+	jsondata << "\"gaze_0_z\": " << gaze_direction0.z << ", ";
+	jsondata << "\"gaze_1_x\": " << gaze_direction1.x << ", ";
+	jsondata << "\"gaze_1_y\": " << gaze_direction1.y << ", ";
+	jsondata << "\"gaze_1_z\": " << gaze_direction1.z << ", ";
+	jsondata << "\"gaze_angle_x\": " << gaze_angle[0] <<  ", ";
+	jsondata << "\"gaze_angle_y\": " << gaze_angle[1] <<  ", ";
+
+	for (int i = 0; i < num_eye_landmarks; ++i)
+	{
+		jsondata << "\"eye_lmk_x_" << i << "\": " << eye_landmarks2D[i].x << ", ";
+	}
+
+	for (int i = 0; i < num_eye_landmarks; ++i)
+	{
+		jsondata << "\"eye_lmk_y_" << i << "\": " << eye_landmarks2D[i].y << ", ";
+	}
+
+	for (int i = 0; i < num_eye_landmarks; ++i)
+	{
+		jsondata << "\"eye_lmk_X_" << i << "\": " << eye_landmarks3D[i].x << ", ";
+	}
+
+	for (int i = 0; i < num_eye_landmarks; ++i)
+	{
+		jsondata << "\"eye_lmk_Y_" << i << "\": " << eye_landmarks3D[i].y << ", ";
+	}
+
+	for (int i = 0; i < num_eye_landmarks; ++i)
+	{
+		jsondata << "\"eye_lmk_Z_" << i << "\": " << eye_landmarks3D[i].z << ", ";
+	}
+
+	// ouput headpose
+	jsondata << "\"pose_Tx\": " << head_pose[0] << ", ";
+	jsondata << "\"pose_Ty\": " << head_pose[1] << ", ";
+	jsondata << "\"pose_Tz\": " << head_pose[2] << ", ";
+	jsondata << "\"pose_Rx\": " << head_pose[3] << ", ";
+	jsondata << "\"pose_Ry\": " << head_pose[4] << ", ";
+	jsondata << "\"pose_Rz\": " << head_pose[5] << ", ";
+
+	// Output the 2D facial landmarks
+	int i = 0;
+	for (auto lmk : landmarks_2D)
+	{
+		if (i < num_face_landmarks)
+		{
+			jsondata << "\"x_" << i << "\": " << lmk << ", ";
+		}
+		if (i >= num_face_landmarks && i < num_face_landmarks*2) // landmarks_2D is twice the size of num_face_landmarks
+		{
+			jsondata << "\"y_" << i-num_face_landmarks << "\": " << lmk << ", ";
+		}
+		i++;
+	}
+
+	// output the 3D facial landmarks
+	i = 0;
+	for (auto lmk : landmarks_3D)
+	{
+		if (i < num_face_landmarks)
+		{
+			jsondata << "\"X_" << i << "\": " << lmk << ", ";
+		}
+		if (i >= num_face_landmarks && i < num_face_landmarks*2)
+		{
+			jsondata << "\"Y_" << i-num_face_landmarks << "\": " << lmk << ", ";
+		}
+		if (i >= num_face_landmarks*2 && i < num_face_landmarks*3) // landmarks_3D is thrice the size of num_face_landmarks
+		{
+			jsondata << "\"Z_" << i-num_face_landmarks*2 << "\": " << lmk << ", ";
+		}
+		i++;
+	}
+
+	// output rigid model parameters
+	jsondata << "\"p_scale\": " << pdm_params_global[0] << ", ";
+	jsondata << "\"p_rx\": " << pdm_params_global[1] << ", ";
+	jsondata << "\"p_ry\": " << pdm_params_global[2] << ", ";
+	jsondata << "\"p_rz\": " << pdm_params_global[3] << ", ";
+	jsondata << "\"p_tx\": " << pdm_params_global[4] << ", ";
+	jsondata << "\"p_ty\": " << pdm_params_global[5] << ", ";
+
+	// output non-rigid model parameters
+	i = 0;
+	for (auto pmp : pdm_params_local)
+	{
+		jsondata << "\"p_" << i << "\": " << pmp << ", ";
+		i++;
+	}
+
+	// TODO: fix mismatch au_reg.second with CSV
+	// output AU intensities
+	//std::sort(au_names_reg.begin(), au_names_reg.end());
+	for (std::string reg_name : au_names_reg)
+	{
+		for (auto au_reg : au_intensities)
+		{
+			if (reg_name.compare(au_reg.first) == 0)
+			{
+				jsondata << "\"" << reg_name << "_r" << "\": " << au_reg.second  << ", "; // Warning: this value does NOT match the data in the CSV file (./processed/name.csv)
+				break;
+			}
+		}
+
+	}
+
+	if (au_intensities.size() == 0)
+	{
+		for (std::string reg_name : au_names_reg)
+		{
+			jsondata << "\"" << reg_name << "_r" << "\": " << 0 << ", "; // These do match with the CSV file
+		}
+	}
+
+	// output AU occurences
+	//std::sort(au_names_class.begin(), au_names_class.end());
+	for (std::string class_name : au_names_class)
+	{
+		for (auto au_class : au_occurences)
+		{
+			if (class_name.compare(au_class.first) == 0)
+			{
+				jsondata << "\"" << class_name << "_c" << "\": " << au_class.second  << ", "; // These do match with the CSV file
+				break;
+			}
+		}
+
+	}
+
+	if (au_occurences.size() == 0)
+	{
+		for (std::string class_name : au_names_class)
+		{
+			jsondata << "\"" << class_name << "_c" << "\": " << 0 << ", "; // These do match with the CSV file
+		}
+	}
+
+	// write HOG
 	if(params.outputHOG())
 	{
 		this->hog_recorder.Write();
@@ -372,7 +559,7 @@ void RecorderOpenFace::WriteObservation()
 			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels()) + 1;
 			aligned_face_queue.set_capacity(capacity);
 
-			// Start the alignment output thread			
+			// Start the alignment output thread
 			aligned_writing_thread = std::thread(&RecorderOpenFace::AlignedImageWritingTask, this);
 		}
 
@@ -401,6 +588,16 @@ void RecorderOpenFace::WriteObservation()
 
 	}
 
+	// Remove comma and close the JSON string with brackets
+	jsonstring = jsondata.str();
+	jsonstring.pop_back(); // remove space
+	jsonstring.pop_back(); // remove comma
+	jsonstring += " } }";
+
+	// Write String to test file. This would be the place to send the string using the desired middleware.
+	jsondata_file.open("test.json");
+	jsondata_file << jsonstring;
+	jsondata_file.close();
 }
 
 void RecorderOpenFace::WriteObservationTracked()
@@ -541,7 +738,5 @@ void RecorderOpenFace::Close()
 	csv_recorder.Close();
 	video_writer.release();
 	metadata_file.close();
+	jsondata_file.close();
 }
-
-
-

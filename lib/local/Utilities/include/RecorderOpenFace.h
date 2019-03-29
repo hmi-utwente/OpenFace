@@ -3,7 +3,7 @@
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.
 // IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
 //
 // License can be found in OpenFace-license.txt
@@ -13,21 +13,21 @@
 //       reports and manuals, must cite at least one of the following works:
 //
 //       OpenFace 2.0: Facial Behavior Analysis Toolkit
-//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
-//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
+//       Tadas Baltruï¿½aitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018
 //
 //       Convolutional experts constrained local model for facial landmark detection.
-//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
-//       in Computer Vision and Pattern Recognition Workshops, 2017.    
+//       A. Zadeh, T. Baltruï¿½aitis, and Louis-Philippe Morency,
+//       in Computer Vision and Pattern Recognition Workshops, 2017.
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
-//       in IEEE International. Conference on Computer Vision (ICCV),  2015 
+//       Erroll Wood, Tadas Baltruï¿½aitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling
+//       in IEEE International. Conference on Computer Vision (ICCV),  2015
 //
 //       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
-//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
-//       in Facial Expression Recognition and Analysis Challenge, 
-//       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
+//       Tadas Baltruï¿½aitis, Marwa Mahmoud, and Peter Robinson
+//       in Facial Expression Recognition and Analysis Challenge,
+//       IEEE International Conference on Automatic Face and Gesture Recognition, 2015
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -88,7 +88,7 @@ namespace Utilities
 		void SetObservationPose(const cv::Vec6f& pose);
 
 		// AU related observations
-		void SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities, 
+		void SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities,
 			const std::vector<std::pair<std::string, double> >& au_occurences);
 
 		// Gaze related observations
@@ -134,17 +134,29 @@ namespace Utilities
 		std::string out_name; // Short name, based on which other names are constructed
 		std::string csv_filename;
 		std::string aligned_output_directory;
+		std::string jsonstring;
+		std::ostringstream jsondata;
 		std::ofstream metadata_file;
+		std::ofstream jsondata_file;
 
 		// The actual output file stream that will be written
 		RecorderCSV csv_recorder;
 		RecorderHOG hog_recorder;
 
 		// The actual temporary storage for the observations
-		
+
 		double timestamp;
 		int face_id;
 		int frame_number;
+
+		// number of landmarks and model modes
+		int num_face_landmarks;
+		int num_eye_landmarks;
+		int num_model_modes;
+
+		// AU names
+		std::vector<std::string> au_names_class;
+		std::vector<std::string> au_names_reg;
 
 		// Facial landmark related observations
 		cv::Mat_<float> landmarks_2D;
@@ -171,7 +183,7 @@ namespace Utilities
 		// For video writing
 		cv::VideoWriter video_writer;
 		std::string media_filename;
-		
+
 		// Do not exceed 100MB in the concurrent queue
 		const int TRACKED_QUEUE_CAPACITY = 100;
 		bool tracked_writing_thread_started;
